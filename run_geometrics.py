@@ -6,44 +6,11 @@ import os
 import sys
 import shutil
 import configparser
-import gdal, gdalconst
+import gdalconst
 import numpy as np
 import geometrics as geo
 import argparse
 import json
-import glob
-
-
-# HELPER: LOCATE ABSOLUTE FILE PATH with GLOB
-def findfiles(data,path=None):
-
-    for key,file in data.items():
-        if not key.lower().endswith('filename'): continue
-
-        print('\nSearching for "{}"'.format(key))
-
-        # absolute path to file
-        if not os.path.isabs(file):
-            if path: file = os.path.join(path,file)
-            file = os.path.abspath(file)
-
-        # locate file (use glob to allow wildcards)
-        files = glob.glob(file)
-
-        if not files:
-            print("WARNING: unable to locate file <{}>".format(file))
-            file = None
-        else:
-            if len(files) > 1:
-                print('WARNING: multiple files located for <{}>, using 1st file'.format(file))
-
-            file = files[0]
-            print('File located <{}>'.format(file))
-
-        # save file to data
-        data[key] = file
-
-    return data
 
 
 # PRIMARY FUNCTION: RUN_GEOMETRICS
