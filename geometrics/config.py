@@ -164,4 +164,3 @@ def process_config(configfile=None,refpath=None,testpath=None):
 
   # cleanup
   return config
-  
