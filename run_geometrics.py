@@ -47,76 +47,18 @@ def findfiles(data,path=None):
 
 
 # PRIMARY FUNCTION: RUN_GEOMETRICS
-def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None):
+def run_geometrics(configfile=None,refpath=None,testpath=None,outputpath=None):
 
     # current absolute path of this function
     curpath = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
+    # parse configuration
+    config = geo.process_config(configfile=configfile,
+        refpath=(refpath or curpath), testpath=(testpath or curpath))
+
     # check inputs
-    if not os.path.isfile(configfile):
-        raise IOError("Configuration file does not exist")
-
-    if refpath is None:
-        refpath = curpath
-    elif not os.path.isdir(refpath):
-        raise IOError('"refpath" not a valid folder <{}>'.format(refpath))
-
-    if testpath is None:
-        testpath = curpath
-    elif not os.path.isdir(refpath):
-        raise IOError('"testpath" not a valid folder <{}>'.format(testpath))
-
     if outputpath is not None and not os.path.isdir(outputpath):
         raise IOError('"outputpath" not a valid folder <{}>'.format(outputpath))
-
-
-    # parse configuration file
-    print("\nReading configuration from <{}>".format(configfile))
-
-    # JSON parsing
-    if configfile.endswith(('.json','.JSON')):
-
-        # open & read JSON file
-        with open(configfile,'r') as fid:
-            config = json.load(fid)
-
-    # CONFIG parsing
-    elif configfile.endswith(('.config','.CONFIG')):
-
-        # setup config parser
-        parser = configparser.ConfigParser()
-        parser.optionxform = str # maintain case-sensitive items
-
-        # read entire configuration file into dict
-        if len(parser.read(configfile)) == 0:
-            raise IOError("Unable to read selected .config file")
-        config = {s:dict(parser.items(s)) for s in parser.sections()}   
-
-        # special section/item parsing
-        s = 'INPUT.TEST'; i = 'CLSMatchValue'; config[s][i] = int(config[s][i])
-        s = 'INPUT.REF'; i = 'CLSMatchValue'; config[s][i] = int(config[s][i])
-        s = 'OPTIONS'; i = 'QuantizeHeight'; config[s][i] = bool(config[s][i])
-        s = 'PLOTS'; i = 'DoPlots'; config[s][i] = bool(config[s][i])
-        s = 'MATERIALS.REF'; i = 'MaterialNames'; config[s][i] = config[s][i].split(',')
-        s = 'MATERIALS.REF'; i = 'MaterialIndicesToIgnore'; config[s][i] = list(map(int, config[s][i].split(',')))
-
-    # unrecognized config file type
-    else:
-        raise IOError('Unrecognized configuration file')
-
-
-    # locate files for each "xxxFilename" configuration parameter
-    # this makes use of "refpath" and "testpath" arguments for relative filenames
-    for item in [('INPUT.REF',refpath),('INPUT.TEST',testpath)]:
-        sec = item[0]; path = item[1]
-        print('\n=====PROCESSING FILES FOR "{}"====='.format(sec))
-        config[sec] = findfiles(config[sec],path)
-
-
-    # print final configuration
-    print('\n=====FINAL CONFIGURATION=====')
-    print(json.dumps(config,indent=2))
-
 
     # Get test model information from configuration file.
     testDSMFilename = config['INPUT.TEST']['DSMFilename']
@@ -165,13 +107,22 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None):
     # Read test model files and apply XYZ offsets.
     print("Reading test model files...")
     print("")
-    testDTM = geo.imageWarp(testDTMFilename, refCLSFilename, xyzOffset)
+
     testMask = geo.imageWarp(testCLSFilename, refCLSFilename, xyzOffset, gdalconst.GRA_NearestNeighbour)
     testDSM = geo.imageWarp(testDSMFilename, refCLSFilename, xyzOffset)
-    testMTL = geo.imageWarp(testMTLFilename, refCLSFilename, xyzOffset, gdalconst.GRA_NearestNeighbour).astype(np.uint8)
-
     testDSM = testDSM + xyzOffset[2]
-    testDTM = testDTM + xyzOffset[2]
+
+    if testDTMFilename is None:
+        print('WARNING: no test DTM, using reference DTM')
+        testDTM = refDTM
+    else:
+        testDTM = geo.imageWarp(testDTMFilename, refCLSFilename, xyzOffset)
+        testDSM = testDSM + xyzOffset[2]
+
+    if testMTLFilename is None:
+        testMTL = None        
+    else:
+        testMTL = geo.imageWarp(testMTLFilename, refCLSFilename, xyzOffset, gdalconst.GRA_NearestNeighbour).astype(np.uint8)
 
     # Create mask for ignoring points labeled NoData in reference files.
     refDSM_NoDataValue = geo.getNoDataValue(refDSMFilename)
@@ -207,7 +158,10 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None):
     print(json.dumps(metrics,indent=2))
 
     # Run the threshold material metrics and report results.
-    geo.run_material_metrics(refNDX, refMTL, testMTL, materialNames, materialIndicesToIgnore)
+    if testMTL is None:
+        print('WARNING: no test material, skipping material metrics')
+    else:
+        geo.run_material_metrics(refNDX, refMTL, testMTL, materialNames, materialIndicesToIgnore)
 
 
 # command line function
@@ -216,7 +170,7 @@ def main():
   # parse inputs
   parser = argparse.ArgumentParser()
   parser.add_argument('-c', '--config', dest='config', 
-      help='Configuration file', required=True)
+      help='Configuration file', required=False)
   parser.add_argument('-r', '--reference', dest='refpath', 
       help='Reference data folder', required=False)
   parser.add_argument('-t', '--test', dest='testpath', 
@@ -228,12 +182,13 @@ def main():
 
   # gather optional arguments
   kwargs = {}
+  if args.config: kwargs['configfile'] = args.config
   if args.refpath: kwargs['refpath'] = args.refpath
   if args.testpath: kwargs['testpath'] = args.testpath
   if args.outputpath: kwargs['outputpath'] = args.outputpath
 
   # run process
-  run_geometrics(configfile=args.config,**kwargs)
+  run_geometrics(**kwargs)
 
 
 if __name__ == "__main__":
