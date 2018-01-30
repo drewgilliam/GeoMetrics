@@ -3,9 +3,7 @@
 #
 
 import os
-import sys
 import shutil
-import configparser
 import gdalconst
 import numpy as np
 import geometrics as geo
