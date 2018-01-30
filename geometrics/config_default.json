@@ -1,0 +1,27 @@
+{
+  "INPUT.REF": {
+    "DSMFilename": "*DSM.tif",
+    "DTMFilename": "*DTM.tif",
+    "CLSFilename": "*CLS.tif",
+    "NDXFilename": "*NDX.tif",
+    "MTLFilename": "*MTL.tif",
+    "CLSMatchValue": 6
+  },
+  "INPUT.TEST": {
+    "DSMFilename": "*DSM.tif",
+    "DTMFilename": "*DTM.tif",
+    "CLSFilename": "*CLS.tif",
+    "MTLFilename": "*MTL.tif",
+    "CLSMatchValue": 6
+  },
+  "OPTIONS": {
+    "QuantizeHeight": true
+  },
+  "PLOTS": {
+    "DoPlots": false
+  },
+  "MATERIALS.REF": {
+    "MaterialNames": ["Unclassified","Asphalt","Concrete/Stone","Glass","Tree","Non-tree vegetation","Metal","Red ceramic","Soil","Solar panel","Water","Polymer"],
+    "MaterialIndicesToIgnore": [12]
+  }
+}
