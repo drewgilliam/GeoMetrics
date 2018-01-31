@@ -88,6 +88,15 @@ def run_geometrics(configfile=None,refpath=None,testpath=None,outputpath=None):
     else:
         testMTL = geo.imageWarp(testMTLFilename, refCLSFilename, xyzOffset, gdalconst.GRA_NearestNeighbour).astype(np.uint8)
 
+    # object masks based on CLSMatchValue(s)
+    refMask = np.zeros_like(refCLS, np.bool)
+    for v in config['INPUT.REF']['CLSMatchValue']:
+        refMask[refCLS == v] = True
+
+    testMask = np.zeros_like(testCLS, np.bool)
+    for v in config['INPUT.TEST']['CLSMatchValue']:
+        testMask[testCLS == v] = True    
+
     # Create mask for ignoring points labeled NoData in reference files.
     refDSM_NoDataValue = geo.getNoDataValue(refDSMFilename)
     refDTM_NoDataValue = geo.getNoDataValue(refDTMFilename)
@@ -100,15 +109,6 @@ def run_geometrics(configfile=None,refpath=None,testpath=None,outputpath=None):
         ignoreMask[refDTM == refDTM_NoDataValue] = True
     if refCLS_NoDataValue is not None:
         ignoreMask[refCLS == refCLS_NoDataValue] = True
-
-    # object masks based on CLSMatchValue(s)
-    refMask = np.zeros_like(refCLS, np.bool)
-    for v in config['INPUT.REF']['CLSMatchValue']:
-        refMask[refCLS == v] = True
-
-    testMask = np.zeros_like(testCLS, np.bool)
-    for v in config['INPUT.TEST']['CLSMatchValue']:
-        testMask[testCLS == v] = True     
 
     # If quantizing to voxels, then match vertical spacing to horizontal spacing.
     QUANTIZE = config['OPTIONS']['QuantizeHeight']
