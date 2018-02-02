@@ -49,25 +49,19 @@ def findfiles(data,path=None):
 # PRIMARY FUNCTION: RUN_GEOMETRICS
 def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None):
 
-    # current absolute path of this function
-    curpath = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-
     # check inputs
     if not os.path.isfile(configfile):
         raise IOError("Configuration file does not exist")
 
-    if refpath is None:
-        refpath = curpath
-    elif not os.path.isdir(refpath):
-        raise IOError('"refpath" not a valid folder <{}>'.format(refpath))
-
-    if testpath is None:
-        testpath = curpath
-    elif not os.path.isdir(refpath):
-        raise IOError('"testpath" not a valid folder <{}>'.format(testpath))
-
     if outputpath is not None and not os.path.isdir(outputpath):
         raise IOError('"outputpath" not a valid folder <{}>'.format(outputpath))
+
+    # configuration file path
+    configpath = os.path.dirname(configfile)
+
+    # parse configuration
+    config = geo.process_config(configfile,
+        refpath=(refpath or configpath), testpath=(testpath or configpath))
 
 
     # parse configuration file
