@@ -64,62 +64,62 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None):
         refpath=(refpath or configpath), testpath=(testpath or configpath))
 
 
-    # parse configuration file
-    print("\nReading configuration from <{}>".format(configfile))
+    # # parse configuration file
+    # print("\nReading configuration from <{}>".format(configfile))
 
-    # JSON parsing
-    if configfile.endswith(('.json','.JSON')):
+    # # JSON parsing
+    # if configfile.endswith(('.json','.JSON')):
 
-        # open & read JSON file
-        with open(configfile,'r') as fid:
-            config = json.load(fid)
+    #     # open & read JSON file
+    #     with open(configfile,'r') as fid:
+    #         config = json.load(fid)
 
-    # CONFIG parsing
-    elif configfile.endswith(('.config','.CONFIG')):
+    # # CONFIG parsing
+    # elif configfile.endswith(('.config','.CONFIG')):
 
-        # setup config parser
-        parser = configparser.ConfigParser()
-        parser.optionxform = str # maintain case-sensitive items
+    #     # setup config parser
+    #     parser = configparser.ConfigParser()
+    #     parser.optionxform = str # maintain case-sensitive items
 
-        # read entire configuration file into dict
-        if len(parser.read(configfile)) == 0:
-            raise IOError("Unable to read selected .config file")
-        config = {s:dict(parser.items(s)) for s in parser.sections()}   
+    #     # read entire configuration file into dict
+    #     if len(parser.read(configfile)) == 0:
+    #         raise IOError("Unable to read selected .config file")
+    #     config = {s:dict(parser.items(s)) for s in parser.sections()}   
 
-        # special section/item parsing
-        s = 'INPUT.TEST'; i = 'CLSMatchValue'; config[s][i] = [int(v) for v in config[s][i].split(',')]
-        s = 'INPUT.REF'; i = 'CLSMatchValue'; config[s][i] = [int(v) for v in config[s][i].split(',')]
-        s = 'OPTIONS'; i = 'QuantizeHeight'; config[s][i] = bool(config[s][i])
-        s = 'PLOTS'; i = 'DoPlots'; config[s][i] = bool(config[s][i])
-        s = 'MATERIALS.REF'; i = 'MaterialNames'; config[s][i] = config[s][i].split(',')
-        s = 'MATERIALS.REF'; i = 'MaterialIndicesToIgnore'; config[s][i] = [int(v) for v in config[s][i].split(',')]
+    #     # special section/item parsing
+    #     s = 'INPUT.TEST'; i = 'CLSMatchValue'; config[s][i] = [int(v) for v in config[s][i].split(',')]
+    #     s = 'INPUT.REF'; i = 'CLSMatchValue'; config[s][i] = [int(v) for v in config[s][i].split(',')]
+    #     s = 'OPTIONS'; i = 'QuantizeHeight'; config[s][i] = bool(config[s][i])
+    #     s = 'PLOTS'; i = 'DoPlots'; config[s][i] = bool(config[s][i])
+    #     s = 'MATERIALS.REF'; i = 'MaterialNames'; config[s][i] = config[s][i].split(',')
+    #     s = 'MATERIALS.REF'; i = 'MaterialIndicesToIgnore'; config[s][i] = [int(v) for v in config[s][i].split(',')]
 
-    # unrecognized config file type
-    else:
-        raise IOError('Unrecognized configuration file')
+    # # unrecognized config file type
+    # else:
+    #     raise IOError('Unrecognized configuration file')
 
 
-    # locate files for each "xxxFilename" configuration parameter
-    # this makes use of "refpath" and "testpath" arguments for relative filenames
-    for item in [('INPUT.REF',refpath),('INPUT.TEST',testpath)]:
-        sec = item[0]; path = item[1]
-        print('\n=====PROCESSING FILES FOR "{}"====='.format(sec))
-        config[sec] = findfiles(config[sec],path)
+    # # locate files for each "xxxFilename" configuration parameter
+    # # this makes use of "refpath" and "testpath" arguments for relative filenames
+    # for item in [('INPUT.REF',refpath),('INPUT.TEST',testpath)]:
+    #     sec = item[0]; path = item[1]
+    #     print('\n=====PROCESSING FILES FOR "{}"====='.format(sec))
+    #     config[sec] = findfiles(config[sec],path)
 
-    # check for iterable configuration options (e.g., list or tuple)
-    opts = (('INPUT.TEST','CLSMatchValue'),('INPUT.REF','CLSMatchValue'),
-        ('MATERIALS.REF','MaterialIndicesToIgnore'))
+    # # check for iterable configuration options (e.g., list or tuple)
+    # opts = (('INPUT.TEST','CLSMatchValue'),('INPUT.REF','CLSMatchValue'),
+    #     ('MATERIALS.REF','MaterialIndicesToIgnore'))
 
-    for opt in opts:
-        s = opt[0]; i = opt[1];
-        try:
-            _ = (v for v in config[s][i])
-        except:
-            config[s][i] = [config[s][i]]
+    # for opt in opts:
+    #     s = opt[0]; i = opt[1];
+    #     try:
+    #         _ = (v for v in config[s][i])
+    #     except:
+    #         config[s][i] = [config[s][i]]
 
-    # print final configuration
-    print('\n=====FINAL CONFIGURATION=====')
-    print(json.dumps(config,indent=2))
+    # # print final configuration
+    # print('\n=====FINAL CONFIGURATION=====')
+    # print(json.dumps(config,indent=2))
 
 
     # Get test model information from configuration file.
