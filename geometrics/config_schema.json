@@ -61,7 +61,9 @@
          "type": "object",
          "required": [
             "DSMFilename",
+            "DTMFilename",
             "CLSFilename",
+            "MTLFilename",
             "CLSMatchValue"
          ],
          "additionalProperties": false,
@@ -70,29 +72,15 @@
                "type": "string"
             },
             "DTMFilename": {
-               "oneOf": [
-                  {
-                     "type": "null"
-                  }, 
-                  {
-                     "type": "string"
-                  }
-               ]
+               "type": "string"
             },
             "CLSFilename": {
                "type": "string"
             },
             "MTLFilename": {
-               "oneOf": [
-                  {
-                     "type": "null"
-                  }, 
-                  {
-                     "type": "string"
-                  }
-               ]
+               "type": "string"
             },
-             "CLSMatchValue": {
+            "CLSMatchValue": {
                "oneOf": [
                   {
                      "type":"integer",
@@ -163,6 +151,18 @@
                      }
                   }
                ]
+            }
+         }
+      },
+      "REGEXEPATH": {
+         "type": "object",
+         "required": [
+            "Align3DPath"
+         ],
+         "additionalProperties": false,
+         "properties": {
+            "Align3DPath": {
+               "type": "string"
             }
          }
       }
