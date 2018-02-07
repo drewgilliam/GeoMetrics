@@ -51,6 +51,13 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None,align=T
     if outputpath is None:
         outputpath = os.path.dirname(testDSMFilename)
 
+    # save configuration file for posterity
+    fileout = os.path.join(outputpath,os.path.basename(testDSMFilename) + "_config.json")
+    if not os.path.isfile(fileout):
+        with open(fileout,'w') as fid:
+            json.dump(metrics,fid,indent=2)
+
+
     # copy testDSM to the output path
     # this is a workaround for the "align3d" function with currently always
     # saves new files to the same path as the testDSM
