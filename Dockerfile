@@ -13,7 +13,7 @@ WORKDIR /
 ARG DOCKER_DEPLOY=true
 ENV DOCKER_DEPLOY=$DOCKER_DEPLOY
 RUN if [ "$DOCKER_DEPLOY" = true ] ; then \
-        pip3 install --no-deps git+https://github.com/pubgeo/core3d-metrics; \
+        pip3 install --no-deps git+https://github.com/drewgilliam/core3d-metrics@docker_develop; \
     fi
 
 RUN apt purge -y \
