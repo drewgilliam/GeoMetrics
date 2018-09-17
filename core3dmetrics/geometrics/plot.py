@@ -8,8 +8,7 @@ if os.getenv('DISPLAY') is None and not platform.system() == "Windows":
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-
-
+from matplotlib import cm,colors
 
 class plot:
 
@@ -22,7 +21,7 @@ class plot:
 
     showPlots = True
     autoSave = False  # Saves figure at end of call to plot.make()
-    dpi = 500
+    dpi = 350
 
     def __init__(self, **kwargs):
 
@@ -51,10 +50,28 @@ class plot:
             if not platform.system() == "Windows":
                 print('DISPLAY not set.  Disabling plot display')
                 self.showPlots = False
-            
+
         plt.rcParams['image.cmap'] = self.defaultCM
 
         print("showPlots = " + str(self.showPlots))
+
+        data = [
+            {
+              'name': 'red-cyan',
+              'colors': [[1.0,0.0,0.0],[0.0,0.0,0.0],[0.0,1.0,1.0]],
+            },
+            {
+              'name': 'green-magenta',
+              'colors': [[0.0,1.0,0.0],[0.0,0.0,0.0],[1.0,0.0,1.0]],
+            },
+        ]
+
+        for item in data:
+            cmap = colors.LinearSegmentedColormap.from_list(item['name'],item['colors'],N=256)
+            cmap.set_bad('k',1.)
+            cm.register_cmap(item['name'],cmap)
+
+
 
     def make(self, image=None, title='', fig=None, **kwargs):
     
@@ -77,7 +94,12 @@ class plot:
                 imshow_kwargs[key] = kwargs[key]
 
         hImg = plt.imshow(image,**imshow_kwargs)
-        mpl.cm.get_cmap().set_bad(color=self.badColor)
+
+        ax = plt.gca()
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # mpl.cm.get_cmap().set_bad(color=self.badColor)
 
         if 'cmap' in kwargs:
             cmap = kwargs['cmap']
@@ -94,6 +116,9 @@ class plot:
 
                 if 'cm_labels' in kwargs:
                     hCM.set_ticklabels(kwargs['cm_labels'], True)
+
+                if 'cm_invert' in kwargs and kwargs['cm_invert']:
+                    hCM.ax.invert_yaxis()
 
 
         if self.showPlots:

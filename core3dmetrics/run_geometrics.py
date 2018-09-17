@@ -64,7 +64,8 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None,
     # Configure plotting
     basename = os.path.basename(testDSMFilename)
     if PLOTS_ENABLE:
-        plot = geo.plot(saveDir=outputpath, autoSave=PLOTS_SAVE, savePrefix=basename+'_', badColor='black',showPlots=PLOTS_SHOW, dpi=900)
+        plot = geo.plot(saveDir=outputpath, autoSave=PLOTS_SAVE, savePrefix=basename+'_', badColor='black',showPlots=PLOTS_SHOW, dpi=900,
+            cmap='viridis')
     else:
         plot = None
         
@@ -100,6 +101,7 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None,
 
     if refMTLFilename:
         refMTL = geo.imageWarp(refMTLFilename, refCLSFilename, interp_method=gdalconst.GRA_NearestNeighbour).astype(np.uint8)
+        refMTL[refMTL==2] = 1 # MANUALLY ADJUST CONCRETE TO COMBINED CLASS
     else:
         print('NO REFERENCE MTL')
 
@@ -186,24 +188,72 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None,
         noDataValue = np.round(noDataValue / unitHgt) * unitHgt
        
     if PLOTS_ENABLE:
+
+        # ranges
+        fac = 10
+        mn = np.ceil(np.amin(refDSM[~ignoreMask])/fac) * fac
+        mx = np.floor(np.amax(refDSM[~ignoreMask])/fac) * fac
+
+        # mn = 240
+        # mx = 300
+        dsm_range = [mn,mx]
+
+
+
         # Reference models can include data voids, so ignore invalid data on display
-        plot.make(refDSM, 'Reference DSM', 111, colorbar=True, saveName="input_refDSM", badValue=noDataValue)
-        plot.make(refDTM, 'Reference DTM', 112, colorbar=True, saveName="input_refDTM", badValue=noDataValue)
+        plot.make(refDSM, 'Reference DSM', 111, colorbar=True, saveName="input_refDSM", badValue=noDataValue,
+            vmin=dsm_range[0],vmax=dsm_range[1])
+        plot.make(refDTM, 'Reference DTM', 112, colorbar=True, saveName="input_refDTM", badValue=noDataValue,
+            vmin=dsm_range[0],vmax=dsm_range[1])
         plot.make(refCLS, 'Reference Classification', 113,  colorbar=True, saveName="input_refClass")
+
+        # plot.make(refMask, 'Reference Evaluation Mask', 114, colorbar=True, saveName="input_refMask",
+        #     cmap='gray',vmin=0,vmax=1)
 
         # Test models shouldn't have any invalid data
         # so display the invalid values to highlight them,
         # unlike with the refSDM/refDTM
-        plot.make(testDSM, 'Test DSM', 151, colorbar=True, saveName="input_testDSM")
-        plot.make(testDTM, 'Test DTM', 152, colorbar=True, saveName="input_testDTM")
+        plot.make(testDSM, 'Test DSM', 151, colorbar=True, saveName="input_testDSM",
+            vmin=dsm_range[0],vmax=dsm_range[1])
+        plot.make(testDTM, 'Test DTM', 152, colorbar=True, saveName="input_testDTM",
+            vmin=dsm_range[0],vmax=dsm_range[1])
         plot.make(testCLS, 'Test Classification', 153, colorbar=True, saveName="input_testClass")
 
-        plot.make(ignoreMask, 'Ignore Mask', 181, saveName="input_ignoreMask")
+        # plot.make(testMask, 'Test Evaluation Mask', 154, colorbar=True, saveName="input_testMask",
+        #     cmap='gray',vmin=0,vmax=1)
+
+        plot.make(ignoreMask, 'Ignore Mask', 181, colorbar=True, saveName="input_ignoreMask",
+            cmap='gray',vmin=0,vmax=1)
+
+        plot.make(testValidData, 'Test Valid Mask', 182, colorbar=True, saveName="input_testValidMask",
+            cmap='gray',vmin=0,vmax=1)
 
         # material maps
         if refMTLFilename and testMTLFilename:
-            plot.make(refMTL, 'Reference Materials', 191, colorbar=True, saveName="input_refMTL",vmin=0,vmax=13)
-            plot.make(testMTL, 'Test Materials', 192, colorbar=True, saveName="input_testMTL",vmin=0,vmax=13)
+            (mtl_index,mtl_name,mtl_color) = geo.material_map()
+            plot.make(refMTL, 'Reference Materials', 191, colorbar=True, saveName="input_refMTL",
+                vmin=min(mtl_index)-0.5,vmax=max(mtl_index)+0.5,
+                cmap=mtl_color,cm_ticks=mtl_index,cm_labels=mtl_name,cm_invert=True)
+            plot.make(testMTL, 'Test Materials', 192, colorbar=True, saveName="input_testMTL",
+                vmin=min(mtl_index)-0.5,vmax=max(mtl_index)+0.5,
+                cmap=mtl_color,cm_ticks=mtl_index,cm_labels=mtl_name,cm_invert=True)
+
+            temp = np.copy(refMTL)
+            temp[refNDX==0] = 0
+            plot.make(temp, 'Reference Materials Masked', 192, colorbar=True, saveName="input_refMTLmasked",
+                vmin=min(mtl_index)-0.5,vmax=max(mtl_index)+0.5,
+                cmap=mtl_color,cm_ticks=mtl_index,cm_labels=mtl_name,cm_invert=True)
+
+            temp = np.copy(testMTL)
+            temp[refNDX==0] = 0
+            for k in config['MATERIALS.REF']['MaterialIndicesToIgnore']: temp[refMTL==k] = 0
+            plot.make(temp, 'Test Materials Masked', 192, colorbar=True, saveName="input_testMTLmasked",
+                vmin=min(mtl_index)-0.5,vmax=max(mtl_index)+0.5,
+                cmap=mtl_color,cm_ticks=mtl_index,cm_labels=mtl_name,cm_invert=True)
+        # # material maps
+        # if refMTLFilename and testMTLFilename:
+        #     plot.make(refMTL, 'Reference Materials', 191, colorbar=True, saveName="input_refMTL",vmin=0,vmax=13)
+        #     plot.make(testMTL, 'Test Materials', 192, colorbar=True, saveName="input_testMTL",vmin=0,vmax=13)
 
     # Run the threshold geometry metrics and report results.
     metrics = dict()
@@ -237,8 +287,10 @@ def run_geometrics(configfile,refpath=None,testpath=None,outputpath=None,
 
         if PLOTS_ENABLE:
             plot.savePrefix = original_save_prefix + "%03d"%(index) + "_"
-            plot.make(testMask.astype(np.int), 'Test Evaluation Mask', 154, colorbar=True, saveName="input_testMask")
-            plot.make(refMask.astype(np.int), 'Reference Evaluation Mask', 114, colorbar=True, saveName="input_refMask")
+            plot.make(testMask, 'Test Evaluation Mask', 154, colorbar=True, saveName="input_testMask",
+                cmap='gray',vmin=0,vmax=1)
+            plot.make(refMask, 'Reference Evaluation Mask', 114, colorbar=True, saveName="input_refMask",
+                cmap='gray',vmin=0,vmax=1)
 
         # Evaluate threshold geometry metrics using refDTM as the testDTM to mitigate effects of terrain modeling uncertainty
         result = geo.run_threshold_geometry_metrics(refDSM, refDTM, refMask, testDSM, refDTM, testMask, tform, ignoreMask, plot=plot)

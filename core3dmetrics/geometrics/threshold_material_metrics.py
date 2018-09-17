@@ -113,7 +113,33 @@ def run_material_metrics(refNDX, refMTL, testMTL, materialNames, materialIndices
         'fraction_structures_correct': correctStructuresFraction,
         'fraction_pixels_correct': correctPixelsFraction
     }
-	
+
     return metrics
-	
+
+
+# material array: index, name, color
+def material_map():
+
+    data = [
+        [ 'Unclassified',     [   0,   0,   0] ],
+        [ 'Asphalt',          [ 128, 128, 128] ],
+        [ 'Concrete',         [ 232, 232, 232] ],
+        [ 'Glass',            [ 255,   0, 255] ],
+        [ 'Tree',             [  38, 154,  38] ],
+        [ 'Vegetation',       [   0, 255,   0] ],
+        [ 'Metal',            [   0, 255, 255] ],
+        [ 'Ceramic',          [ 255,   0,   0] ],
+        [ 'Soil',             [ 255, 255,   0] ],
+        [ 'Solar_panel',      [  96,   0, 191] ],
+        [ 'Water',            [   0,   0, 255] ],
+        [ 'Polymer',          [ 255, 255, 255] ],
+        [ 'Unscored',         [   0,   0,   0] ],
+        [ 'Indeterminate',    [   0,   0,   0] ],
+    ]
+
+    i = [idx for idx,item in enumerate(data)]
+    n = [item[0] for item in data]
+    c = [np.array(item[1])/255.0 for item in data]
+
+    return (i,n,c)
 

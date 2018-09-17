@@ -61,9 +61,10 @@ def run_threshold_geometry_metrics(refDSM, refDTM, refMask, testDSM, testDTM, te
 
         errorMap = (test_height-ref_height)
         errorMap[~ref_footprint & ~test_footprint] = np.nan
-        plot.make(errorMap, 'Height Error', 291, saveName=PLOTS_SAVE_PREFIX+"errHgt", colorbar=True)
-        plot.make(errorMap, 'Height Error (clipped)', 292, saveName=PLOTS_SAVE_PREFIX+"errHgtClipped", colorbar=True,
-            vmin=-5,vmax=5)
+        plot.make(errorMap, 'Height Error', 291, saveName=PLOTS_SAVE_PREFIX+"errHgt", colorbar=True,
+            cmap='red-cyan')
+        plot.make(errorMap, '3D Error', 292, saveName=PLOTS_SAVE_PREFIX+"errHgtClipped", colorbar=True,
+            vmin=-5,vmax=5,cmap='red-cyan')
 
 
     # 2D ANALYSIS==========
@@ -99,6 +100,14 @@ def run_threshold_geometry_metrics(refDSM, refDTM, refMask, testDSM, testDTM, te
         plot.make(tp_2D_array, 'True Positive Regions',  283, saveName=PLOTS_SAVE_PREFIX+"truePositive")
         plot.make(fn_2D_array, 'False Negative Regions', 281, saveName=PLOTS_SAVE_PREFIX+"falseNegetive")
         plot.make(fp_2D_array, 'False Positive Regions', 282, saveName=PLOTS_SAVE_PREFIX+"falsePositive")
+
+        errorMap = np.full(tp_2D_array.shape,np.nan)
+        errorMap[fp_2D_array] = -1.0
+        errorMap[fn_2D_array] =  1.0
+
+        print('UNIQUE ERRORS: {}'.format(np.unique(errorMap)))
+        plot.make(errorMap, '2D Error', 285, saveName=PLOTS_SAVE_PREFIX+"2derror", colorbar=True,
+            vmin=-1,vmax=1,cm_ticks=[-1,0,1],cm_labels=['FP','','FN'],cmap='green-magenta')
 
 
     # 3D ANALYSIS==========
